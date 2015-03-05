@@ -1,0 +1,73 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.1/css/bootstrap.min.css"/>
+  <script type="text/javascript" src="http://cdnimg.ocj.com.cn/common/js/jquery-1.10.2.min.js"></script>
+  <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+  <style>
+    .bunny {
+      color:#AF4442
+    }
+    .cat {
+      color:#3170A9
+    }
+  </style>
+  <script>
+    $(function(){
+      var iosocket = io.connect();
+
+      var name;
+
+      $('#myName').keypress(function(event) {
+        if(event.which == 13) {
+          event.preventDefault();
+          name = $(this).val();
+          var myname = $('<p><span class="label label-default">'+name+'</span></p>');
+          $(this).parent('.form-group').before(myname);
+          $(this).parent('.form-group').remove();
+
+        }
+      });
+
+      iosocket.on('connect', function () {
+        $('.container').prepend($('<div class="alert alert-success" role="alert">已连接</div>'));
+
+        iosocket.on('message', function(message) {
+          var messages = message.split(';');
+          $('#incomingChatMessages').append($('<li class='+messages[0]+'></li>').text(messages[0]+' say:'+messages[1]));
+        });
+        iosocket.on('disconnect', function() {
+          $('#incomingChatMessages').append('<li>Disconnected</li>');
+        });
+      });
+
+      $('#outgoingChatMessage').keypress(function(event) {
+        if(event.which == 13) {
+          event.preventDefault();
+          iosocket.send(name+';'+$('#outgoingChatMessage').val());
+          $('#incomingChatMessages').append($('<li class='+name+'></li>').text(name+' say:'+$('#outgoingChatMessage').val()));
+          $('#outgoingChatMessage').val('');
+        }
+      });
+    });
+  </script>
+</head>
+<body>
+<div class="container">
+
+  Incoming Chat:&nbsp;<ul id="incomingChatMessages"></ul>
+  <br />
+  <div class="form-group">
+    <label for="myName">name:</label>
+    <input type="text" class="form-control" id="myName" placeholder="Enter Your Name">
+  </div>
+  <div class="form-group">
+    <label for="outgoingChatMessage">enter:</label>
+    <input type="text" class="form-control" id="outgoingChatMessage" placeholder="Enter info">
+  </div>
+</div>
+
+</body>
+</html>
+
+
